@@ -1,6 +1,6 @@
 # BizHub API
 
-A RESTful API for small business operations, managing sales, inventory, payments, and notifications.
+A RESTful API for small business operations, managing sales, inventory, payments, and notifications using MySQL.
 
 ## Features
 - User authentication with JWT (admin, staff, customer roles).
@@ -31,37 +31,45 @@ A RESTful API for small business operations, managing sales, inventory, payments
    pip install -r requirements.txt
    ```
 
-4. **Set Up Environment Variables**:
+4. **Set Up MySQL Database**:
+   - Install MySQL locally or use PythonAnywhere’s MySQL.
+   - Create a database named `bizhub`:
+     ```sql
+     CREATE DATABASE bizhub;
+     ```
+
+5. **Set Up Environment Variables**:
    - Copy `.env.example` to `.env`:
      ```bash
      cp .env.example .env
      ```
    - Edit `.env` with:
-     - `DJANGO_SECRET_KEY`: Generate a secure key.
+     - `DJANGO_SECRET_KEY`: Generate a secure key (e.g., `python -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())"`).
      - `DEBUG`: Set to `True` for development, `False` for production.
-     - `DB_NAME`, `DB_USER`, `DB_PASSWORD`, `DB_HOST`, `DB_PORT`: PostgreSQL credentials.
-     - `MPESA_SHORTCODE`, `MPESA_CONSUMER_KEY`, `MPESA_CONSUMER_SECRET`, `MPESA_PASSKEY`, `MPESA_CALLBACK_URL`: M-Pesa Daraja credentials.
-     - `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_PHONE_NUMBER`: Twilio credentials.
-     - `SENDGRID_API_KEY`, `DEFAULT_FROM_EMAIL`: SendGrid credentials.
-     - `REDIS_HOST`: Redis server (e.g., localhost or external service).
+     - `DB_NAME`, `DB_USER`, `DB_PASSWORD`, `DB_HOST`, `DB_PORT`: MySQL credentials.
+     - `MPESA_SHORTCODE`, `MPESA_CONSUMER_KEY`, `MPESA_CONSUMER_SECRET`, `MPESA_PASSKEY`, `MPESA_CALLBACK_URL`: M-Pesa Daraja credentials (from https://developer.safaricom.co.ke/).
+     - `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_PHONE_NUMBER`: Twilio credentials (from https://www.twilio.com/).
+     - `SENDGRID_API_KEY`, `DEFAULT_FROM_EMAIL`: SendGrid credentials (from https://sendgrid.com/).
+     - `REDIS_HOST`: Redis server (e.g., redis://<host>:6379 from Redis Labs free tier).
+     - `SAFARICOM_API`: Set to `https://sandbox.safaricom.co.ke` for testing.
 
-5. **Run Migrations**:
+6. **Run Migrations**:
    ```bash
    python manage.py makemigrations
    python manage.py migrate
    ```
 
-6. **Create a Superuser**:
+7. **Create a Superuser**:
    ```bash
    python manage.py createsuperuser
    ```
 
-7. **Run the Development Server**:
+8. **Run the Development Server**:
    ```bash
    python manage.py runserver
    ```
 
-8. **Access the API**:
+9. **Access the API**:
    - Swagger documentation: `http://localhost:8000/swagger/`
    - Admin panel: `http://localhost:8000/admin/`
 
@@ -69,7 +77,7 @@ A RESTful API for small business operations, managing sales, inventory, payments
 
 1. **Create a PythonAnywhere Account**: Sign up at https://www.pythonanywhere.com.
 2. **Clone the Repository**:
-   - Go to the "Consoles" tab and open a Bash console.
+   - Open a Bash console in the “Consoles” tab.
    - Clone your repository:
      ```bash
      git clone <your-repo-url>
@@ -83,15 +91,18 @@ A RESTful API for small business operations, managing sales, inventory, payments
    pip install -r requirements.txt
    ```
 
-4. **Configure PostgreSQL**:
-   - Request a PostgreSQL database from PythonAnywhere support (free tier).
-   - Update `.env` with the provided database credentials (DB_NAME, DB_USER, DB_PASSWORD, DB_HOST, DB_PORT).
+4. **Configure MySQL**:
+   - In the “Databases” tab, create a MySQL database.
+   - Note the database name, username, password, and host (e.g., `<your-username>.mysql.pythonanywhere-services.com`).
+   - Update `.env` with these credentials.
 
 5. **Set Up Environment Variables**:
-   - Add environment variables in PythonAnywhere’s “Web” tab under “Environment Variables”:
+   - In the “Web” tab, under “Environment Variables”, add:
      - `DJANGO_SECRET_KEY`, `MPESA_*`, `TWILIO_*`, `SENDGRID_*`.
      - `MPESA_CALLBACK_URL`: Set to `https://<your-username>.pythonanywhere.com/api/payments/mpesa/callback/`.
-     - `REDIS_HOST`: Use an external Redis provider (e.g., Redis Labs free tier) as PythonAnywhere doesn’t provide Redis.
+     - `REDIS_HOST`: Use a free Redis instance (e.g., Redis Labs).
+     - `DB_NAME`, `DB_USER`, `DB_PASSWORD`, `DB_HOST`, `DB_PORT`: MySQL credentials from PythonAnywhere.
+     - `SAFARICOM_API`: `https://sandbox.safaricom.co.ke`.
 
 6. **Run Migrations**:
    ```bash
@@ -99,11 +110,18 @@ A RESTful API for small business operations, managing sales, inventory, payments
    python manage.py migrate
    ```
 
-7. **Configure Web App**:
+7. **Collect Static Files**:
+   ```bash
+   python manage.py collectstatic
+   ```
+
+8. **Configure Web App**:
    - In the “Web” tab, create a new web app with Python 3.10.
-   - Set the source code path to `/home/<your-username>/bizhub_api`.
-   - Set the working directory to `/home/<your-username>/bizhub_api`.
-   - Update the WSGI configuration file (`/var/www/<your-username>_pythonanywhere_com_wsgi.py`):
+   - Set:
+     - Source code: `/home/<your-username>/bizhub_api`
+     - Working directory: `/home/<your-username>/bizhub_api`
+     - Static files: URL `/static/`, Path `/home/<your-username>/bizhub_api/staticfiles`
+   - Update the WSGI file (`/var/www/<your-username>_pythonanywhere_com_wsgi.py`):
      ```python
      import os
      import sys
@@ -115,23 +133,21 @@ A RESTful API for small business operations, managing sales, inventory, payments
      from django.contrib.staticfiles.handlers import StaticFilesHandler
      application = StaticFilesHandler(get_wsgi_application())
      ```
-   - Set static files:
-     - URL: `/static/`, Path: `/home/<your-username>/bizhub_api/staticfiles`
-   - Run `python manage.py collectstatic` in the console.
 
-8. **Enable ASGI for Django Channels**:
-   - PythonAnywhere doesn’t natively support ASGI, so use a separate worker process for Daphne:
+9. **Enable ASGI for Django Channels**:
+   - PythonAnywhere doesn’t natively support ASGI, so run Daphne as a separate process:
      ```bash
      daphne -b 0.0.0.0 -p 8001 bizhub.asgi:application &
      ```
-   - For WebSocket testing, use an external Redis provider and configure a reverse proxy (e.g., via ngrok or a custom domain).
+   - For WebSocket testing, use an external Redis provider and consider ngrok for local testing or a custom domain for production.
 
-9. **Reload the Web App**:
-   - Click “Reload” in the PythonAnywhere “Web” tab.
+10. **Reload the Web App**:
+    - Click “Reload” in the “Web” tab.
 
-10. **Test the Deployment**:
+11. **Test the Deployment**:
     - Access the API at `https://<your-username>.pythonanywhere.com/swagger/`.
     - Test endpoints with Postman.
+    - Run tests: `python manage.py test`.
 
 ## Testing
 Run unit tests:
