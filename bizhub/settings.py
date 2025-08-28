@@ -1,6 +1,8 @@
 import os
 from pathlib import Path
 from decouple import config
+import pymysql
+pymysql.install_as_MySQLdb()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -58,16 +60,14 @@ ASGI_APPLICATION = 'bizhub.asgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': config('DB_NAME', default='bizhub'),
-        'USER': config('DB_USER', default=''),
-        'PASSWORD': config('DB_PASSWORD', default=''),
-        'HOST': config('DB_HOST', default='localhost'),
-        'PORT': config('DB_PORT', default='3306'),
-        'OPTIONS': {
-            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
-        },
+        'NAME': 'bizhub_db',
+        'USER': 'root',  # or whatever user you created
+        'PASSWORD': '@Tonyblair0111414441',
+        'HOST': 'localhost',
+        'PORT': '3306',
     }
 }
+
 
 CHANNEL_LAYERS = {
     'default': {
