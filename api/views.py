@@ -18,7 +18,8 @@ import base64
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
 
-channel_layer = get_channel_layer()
+def some_view(request):
+    channel_layer = get_channel_layer()
 
 class StandardResultsSetPagination(PageNumberPagination):
     page_size = 10

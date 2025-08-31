@@ -10,7 +10,7 @@ SECRET_KEY = config('DJANGO_SECRET_KEY', default='your-secret-key-here')
 
 DEBUG = config('DEBUG', default=False, cast=bool)
 
-ALLOWED_HOSTS = ['*']  # Update with your PythonAnywhere domain (e.g., username.pythonanywhere.com)
+ALLOWED_HOSTS = ['CaptainBlair.pythonanywhere.com']  # Update with your PythonAnywhere domain (e.g., username.pythonanywhere.com)
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -60,23 +60,23 @@ ASGI_APPLICATION = 'bizhub.asgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'bizhub_db',
-        'USER': 'root',  # or whatever user you created
+        'NAME': 'CaptainBlair$bizhub_db',  # note: must include username prefix!
+        'USER': 'CaptainBlair',
         'PASSWORD': '@Tonyblair0111414441',
-        'HOST': 'localhost',
+        'HOST': 'CaptainBlair.mysql.pythonanywhere-services.com',
         'PORT': '3306',
     }
 }
 
 
+
 CHANNEL_LAYERS = {
-    'default': {
-        'BACKEND': 'channels_redis.core.RedisChannelLayer',
-        'CONFIG': {
-            'hosts': [(config('REDIS_HOST', default='localhost'), 6379)],
-        },
-    },
+    "default": {
+        "BACKEND": "channels.layers.InMemoryChannelLayer"
+    }
 }
+
+
 
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
